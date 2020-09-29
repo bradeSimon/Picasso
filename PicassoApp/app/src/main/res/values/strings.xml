@@ -1,0 +1,12 @@
+<resources>
+    //Main activity
+    <string name="app_name">Picasso</string>
+    <string name="EnterTXT">Enter</string>
+    <string name="PleaseEnterName">Please Enter your name:</string>
+    <string name="NameTXT">Name</string>
+
+    //Main Menu
+    <string name="WelcomeTXT">Welcome "Player"</string>
+    <string name="playGameTXT">Play Game</string>
+    <string name="optionTXT">Option</string>
+</resources>
