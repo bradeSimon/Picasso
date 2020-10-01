@@ -104,3 +104,15 @@ void stop(void){
   MOTOR_SetSpeed(LEFT,0); //On met la vitesse du moteur gauche a 0
   MOTOR_SetSpeed(RIGHT,0); //On met la vitesse du moteur droit a 0
 }
+
+
+
+/*
+servo stuff
+*/
+
+void elevate(char moteur,char direction){
+  
+
+}
+
