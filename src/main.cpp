@@ -21,7 +21,8 @@ void turn(float angle,float speed); //Fonction pour faire tourner le robot selon
 void stop(void); //Fonction pour faire arreter le Robot
 
 float kP = 0.001;//0.001
-float kI = 0.00001;
+float kI = 0.0001;
+//float kI = 0;
 /*==========================================================================
 Fonction MAIN pour realiser le parcours
 ============================================================================*/
@@ -30,8 +31,43 @@ void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 
 void loop() {
   while (!ROBUS_IsBumper(3)); //Le robot va attendre d'avoir le bumper en arriere avant de partir le code
-  
-  forward(0.4,8);
+  //turn(0.25,720);
+  delay(500);
+  forward(0.4,5);
+  /*forward(0.4,1.225);
+  delay(500);
+
+  turn(0.25,-90);
+  delay(500);
+
+  forward(0.4,0.90);
+  delay(500);
+
+  turn(0.25,90);
+  delay(500);
+
+  forward(0.4,0.875);
+  delay(500);
+
+  turn(0.25,45);
+  delay(500);
+
+  forward(0.4,1.80); //a verifier
+  delay(500);
+
+  turn(0.25,-90);
+  delay(500);
+
+  forward(0.4,0.63);
+  delay(500);
+
+  turn(0.25,45);
+  delay(500);
+
+  forward(0.4,1.05);
+  delay(500);
+
+  turn(0.25,180);*/
   stop();
 
   //Étape du parcours à programmer ici
@@ -53,8 +89,7 @@ Details:
   entre les deux pour s'assurer quelle soit la meme pour une meme vitesse
 ============================================================================*/
 void forward(float speed, float distance){ 
-  int nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
-
+  uint32_t nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
   //Déclaration des variables
   float memErreur = 0;
   float diff = 0;
@@ -73,11 +108,17 @@ void forward(float speed, float distance){
     diff = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
     valeurP = (diff * kP);
     memErreur = memErreur + diff;
-    valeurI = (diff * kI);
+    valeurI = (memErreur * kI);
     //Serial.println(valeurP);
    // Serial.println(valeurI);
     MOTOR_SetSpeed(LEFT,speed); //Faire avancer le moteur gauche
     MOTOR_SetSpeed(RIGHT,(speed+valeurP+valeurI)); //Faire avancer le moteur droit
+    /*Serial.println("\n\r Valeur P:");
+    Serial.println(valeurP);
+    Serial.println("\n\r Valeur I:");
+    Serial.println(valeurI);
+    Serial.println("\n\r speed:");
+    Serial.println((speed+valeurP+valeurI));*/
   }
   stop(); //Pour arreter de faire tourner le Robot lorsquil arrive a la bonne distance
 
@@ -105,14 +146,14 @@ void turn(float speed, float angle){
   if(angle>=0){ //Pour tourner dans le sens Horaire
     while(ENCODER_Read(LEFT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer a tourner
       MOTOR_SetSpeed(LEFT,speed); //Le moteur gauche va tourner dans le sens Anti-Horaire
-      MOTOR_SetSpeed(RIGHT,-speed*1.05); //Le moteur droit va tourner dans le sens Anti-Horaire
+      MOTOR_SetSpeed(RIGHT,-speed); //Le moteur droit va tourner dans le sens Anti-Horaire
     }
     stop(); //Pour arreter de faire tourner le Robot lorsquil arrive au bon angle
 
   }else{ //Pour tourner dans le sens Anti-Horaire
     while(ENCODER_Read(RIGHT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer a tourner
       MOTOR_SetSpeed(LEFT,-speed); //Le moteur gauche a tourner dans le sens Horaire
-      MOTOR_SetSpeed(RIGHT,speed*1.05); //Le moteur droit a tourner dans le sens Horaire
+      MOTOR_SetSpeed(RIGHT,speed); //Le moteur droit a tourner dans le sens Horaire
     }
     stop(); //Pour arreter de faire tourner le Robot lorsquil arrive au bon angle
 
