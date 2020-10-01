@@ -20,7 +20,8 @@ void forward(float speed, float distance); //Fonction pour faire avancer le robo
 void turn(float angle,float speed); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
 
-
+float kP = 0;
+float kI = 0;
 /*==========================================================================
 Fonction MAIN pour realiser le parcours
 ============================================================================*/
@@ -30,7 +31,7 @@ void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 void loop() {
   while (!ROBUS_IsBumper(3)); //Le robot va attendre d'avoir le bumper en arriere avant de partir le code
   
-  //Étape du parcour a programmer ici
+  //Étape du parcours à programmer ici
 
 }
 
@@ -50,12 +51,27 @@ Details:
 ============================================================================*/
 void forward(float speed, float distance){ 
   int nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
+
+  //Déclaration des variables
+  float memErreur = 0;
+  float diff = 0;
+  float valeurP = 0;
+  float valeurI = 0;
+
+
+
   ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
   ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
   
   while(ENCODER_Read(LEFT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
+    
+    delay(200);
+    diff = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
+    valeurP = (diff * kP);
+    memErreur = memErreur + diff;
+    valeurI = (diff * kI);
     MOTOR_SetSpeed(LEFT,speed); //Faire avancer le moteur gauche
-    MOTOR_SetSpeed(RIGHT,speed*1.05); //Faire avancer le moteur droit
+    MOTOR_SetSpeed(RIGHT,(speed+ valeurP + valeurI)); //Faire avancer le moteur droit
   }
   stop(); //Pour arreter de faire tourner le Robot lorsquil arrive a la bonne distance
 
