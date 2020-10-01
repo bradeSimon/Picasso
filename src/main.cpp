@@ -20,8 +20,8 @@ void forward(float speed, float distance); //Fonction pour faire avancer le robo
 void turn(float angle,float speed); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
 
-float kP = 0;
-float kI = 0;
+float kP = 0.001;//0.001
+float kI = 0.00001;
 /*==========================================================================
 Fonction MAIN pour realiser le parcours
 ============================================================================*/
@@ -31,6 +31,9 @@ void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 void loop() {
   while (!ROBUS_IsBumper(3)); //Le robot va attendre d'avoir le bumper en arriere avant de partir le code
   
+  forward(0.4,8);
+  stop();
+
   //Étape du parcours à programmer ici
 
 }
@@ -59,7 +62,8 @@ void forward(float speed, float distance){
   float valeurI = 0;
 
 
-
+  MOTOR_SetSpeed(LEFT,speed); //Faire avancer le moteur gauche
+  MOTOR_SetSpeed(RIGHT,speed); //Faire avancer le moteur droit
   ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
   ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
   
@@ -70,8 +74,10 @@ void forward(float speed, float distance){
     valeurP = (diff * kP);
     memErreur = memErreur + diff;
     valeurI = (diff * kI);
+    //Serial.println(valeurP);
+   // Serial.println(valeurI);
     MOTOR_SetSpeed(LEFT,speed); //Faire avancer le moteur gauche
-    MOTOR_SetSpeed(RIGHT,(speed+ valeurP + valeurI)); //Faire avancer le moteur droit
+    MOTOR_SetSpeed(RIGHT,(speed+valeurP+valeurI)); //Faire avancer le moteur droit
   }
   stop(); //Pour arreter de faire tourner le Robot lorsquil arrive a la bonne distance
 
