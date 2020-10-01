@@ -50,12 +50,12 @@ Details:
 ============================================================================*/
 void forward(float speed, float distance){ 
   int nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
-  ENCODER_ReadReset(0); //Reset du compteur de l'encodeur gauche
-  ENCODER_ReadReset(1); //Reset du compteur de l'encodeur droit
+  ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
+  ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
   
-  while(ENCODER_Read(0)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
-    MOTOR_SetSpeed(0,speed); //Faire avancer le moteur gauche
-    MOTOR_SetSpeed(1,speed*1.05); //Faire avancer le moteur droit
+  while(ENCODER_Read(LEFT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
+    MOTOR_SetSpeed(LEFT,speed); //Faire avancer le moteur gauche
+    MOTOR_SetSpeed(RIGHT,speed*1.05); //Faire avancer le moteur droit
   }
   stop(); //Pour arreter de faire tourner le Robot lorsquil arrive a la bonne distance
 
@@ -77,20 +77,20 @@ Details:
 ============================================================================*/
 void turn(float speed, float angle){
   int nombrePulse=floor(abs(angle/0.047629)); //Convertion de l'angle en nombre de pulse
-  ENCODER_ReadReset(0); //Reset du compteur de l'encodeur gauche
-  ENCODER_ReadReset(1); //Reset du compteur de l'encodeur droit
+  ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
+  ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
 
   if(angle>=0){ //Pour tourner dans le sens Horaire
-    while(ENCODER_Read(0)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer a tourner
-      MOTOR_SetSpeed(0,speed); //Le moteur gauche va tourner dans le sens Anti-Horaire
-      MOTOR_SetSpeed(1,-speed*1.05); //Le moteur droit va tourner dans le sens Anti-Horaire
+    while(ENCODER_Read(LEFT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer a tourner
+      MOTOR_SetSpeed(LEFT,speed); //Le moteur gauche va tourner dans le sens Anti-Horaire
+      MOTOR_SetSpeed(RIGHT,-speed*1.05); //Le moteur droit va tourner dans le sens Anti-Horaire
     }
     stop(); //Pour arreter de faire tourner le Robot lorsquil arrive au bon angle
 
   }else{ //Pour tourner dans le sens Anti-Horaire
-    while(ENCODER_Read(1)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer a tourner
-      MOTOR_SetSpeed(0,-speed); //Le moteur gauche a tourner dans le sens Horaire
-      MOTOR_SetSpeed(1,speed*1.05); //Le moteur droit a tourner dans le sens Horaire
+    while(ENCODER_Read(RIGHT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer a tourner
+      MOTOR_SetSpeed(LEFT,-speed); //Le moteur gauche a tourner dans le sens Horaire
+      MOTOR_SetSpeed(RIGHT,speed*1.05); //Le moteur droit a tourner dans le sens Horaire
     }
     stop(); //Pour arreter de faire tourner le Robot lorsquil arrive au bon angle
 
@@ -101,6 +101,6 @@ void turn(float speed, float angle){
 Fonction pour faire arreter le robot
 ============================================================================*/
 void stop(void){
-  MOTOR_SetSpeed(0,0); //On met la vitesse du moteur gauche a 0
-  MOTOR_SetSpeed(1,0); //On met la vitesse du moteur droit a 0
+  MOTOR_SetSpeed(LEFT,0); //On met la vitesse du moteur gauche a 0
+  MOTOR_SetSpeed(RIGHT,0); //On met la vitesse du moteur droit a 0
 }
