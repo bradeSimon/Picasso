@@ -16,14 +16,12 @@ Details sur le robot:
 #include <Arduino.h>
 #include <LibRobus.h>
 
-float SPEEDTURN = 0.2;
-float SPEEDFORWARD = 0.6;
-float SPEEDrun = 0.0;
-
+//---Declaration des differentes fonctions-----//
 void forward(float speed, float distance); //Fonction pour faire avancer le robot en ligne droite sur une distance en metre
 void turn(float speed, float angle); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
 
+//--Enlever les commentaires des variables selon le robot a programmer--//
 //valeurs PID robot A:
 	/*float kP = 0.002;
 	float kI = 0.0003;
@@ -33,13 +31,21 @@ void stop(void); //Fonction pour faire arreter le Robot
 	float kP = 0.0013;
 	float kI = 0.00043;
 	float kD = 0.000070;
+//----------------------------------------------------------------------//
+
+float kP_Turn=0.0028;
+float kI_Turn=0; //I nest pas utilise pour les virages
+float kD_Turn=0; //D nest pas utilise pour les virages
+
+float SPEEDTURN = 0.2; //Vitesse des virages [0,1]
+
+//-------(somme de SPEEDFOWARD et SPEEDrun ne peut pas depasser 0.9)--------//
+float SPEEDFORWARD = 0.6; //Vitesse des lignes droites [0,1]
+float SPEEDrun = 0.0; //Vitesse ajoutee aux lignes droites pour le retour [0,1]
+//--------------------------------------------------------------------------//
 
 float capValeurI = 0.04;
 float correctAngle = 2.;
-
-float kP_Turn=0.0028; //0.0028
-float kI_Turn=0; 
-float kD_Turn=0; 
 
 /*==========================================================================
 Fonction MAIN pour realiser le parcours
@@ -51,39 +57,35 @@ void loop() {
   while (!ROBUS_IsBumper(3)); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
   delay(300);
   
-
-  //forward(SPEEDFORWARD,8);
-
-
   forward(SPEEDFORWARD,1.225);
   turn(SPEEDTURN,-90);
   
   forward(SPEEDFORWARD,0.90);
-  turn(SPEEDTURN,90); //88
-
+  turn(SPEEDTURN,90);
+  
   forward(SPEEDFORWARD,0.97);
-  turn(SPEEDTURN,45);//42
+  turn(SPEEDTURN,45);
 
   forward(SPEEDFORWARD,1.84);
-  turn(SPEEDTURN,-90);//-87
+  turn(SPEEDTURN,-90);
 
   forward(SPEEDFORWARD,0.575);
-  turn(SPEEDTURN,45);//40
+  turn(SPEEDTURN,45);
 
-  forward(SPEEDFORWARD,1.045);
-  turn(SPEEDTURN,-180);//-183
+  forward(SPEEDFORWARD,1.245); //1.045
+  turn(SPEEDTURN,-180);
   //-------------------------
-  forward(SPEEDFORWARD + SPEEDrun,1.045);
+  forward(SPEEDFORWARD + SPEEDrun,1.245);
   turn(SPEEDTURN,-45);
 
   forward(SPEEDFORWARD + SPEEDrun,0.575);
-  turn(SPEEDTURN,90);//88
+  turn(SPEEDTURN,90);
 
   forward(SPEEDFORWARD + SPEEDrun,1.84);
-  turn(SPEEDTURN,-45);//-40
+  turn(SPEEDTURN,-45);
 
   forward(SPEEDFORWARD + SPEEDrun,0.97);
-  turn(SPEEDTURN,-90);//-88
+  turn(SPEEDTURN,-90);
 
   forward(SPEEDFORWARD + SPEEDrun,0.90);
   turn(SPEEDTURN,90);
@@ -107,7 +109,7 @@ Details:
   entre les deux pour s'assurer quelle soit la meme pour une meme vitesse
 ============================================================================*/
 void forward(float speed, float distance){ 
-  delay(400);
+  delay(200); //pas touche!!!
   uint32_t nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
   //Declaration des variables
   float memErreur = 0;
@@ -116,12 +118,11 @@ void forward(float speed, float distance){
   float valeurP = 0;
   float valeurI = 0;
   float valeurD = 0;
-
   float rapport_Vitesse=0.3;
 
   ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
   ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
-  delay(400);
+  delay(200); //pas touche!!!
 
   while(ENCODER_Read(LEFT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
     
@@ -145,18 +146,18 @@ void forward(float speed, float distance){
     }
     else;
 
-    MOTOR_SetSpeed(LEFT,speed*rapport_Vitesse); //Faire avancer le moteur gauche
+    MOTOR_SetSpeed(LEFT,(speed*rapport_Vitesse)); //Faire avancer le moteur gauche
     MOTOR_SetSpeed(RIGHT,(rapport_Vitesse*(speed+valeurP+valeurI+valeurD))); //Faire avancer le moteur droit
     
-    if(rapport_Vitesse<1 && ENCODER_Read(LEFT)<float(nombrePulse*0.50)){
+    if(rapport_Vitesse < 1 && ENCODER_Read(LEFT) < float(nombrePulse*0.50)){
         rapport_Vitesse+=0.1;
     } 
-    if(ENCODER_Read(LEFT)>int32_t(nombrePulse)-5347&&rapport_Vitesse>0.23){
-      rapport_Vitesse+=-0.1;
+    if(ENCODER_Read(LEFT) > (int32_t(nombrePulse)-5347)&& rapport_Vitesse > 0.23){
+      rapport_Vitesse-=0.1;
     }
   }
   stop(); //Pour arreter de faire avancer le Robot lorsquil arrive a la bonne distance
-  Serial.println("FIN DU TEST");
+  //Serial.println("FIN DU TEST");
 }
 
 /*==========================================================================
@@ -174,13 +175,10 @@ Details:
 ============================================================================*/
 void turn(float speed, float angle){
 
-  if(angle<0){
-    angle+=correctAngle;
-  }else if(angle>0){
-    angle-=correctAngle;
-  }
+  if(angle<0){ angle+=correctAngle;}
+  else if(angle>0){angle-=correctAngle;}
 
-  delay(400);
+  delay(200); //pas touche!!!
   int32_t nombrePulse=floor(abs(angle*21.8)); //21.99 ---> 20.8 
   //Serial.println(nombrePulse);
   
@@ -193,7 +191,7 @@ void turn(float speed, float angle){
   ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
   ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
 
-  delay(400);
+  delay(200);//pas touche!!!
 
   if(angle>=0){ //Pour tourner dans le sens Horaire
     while(ENCODER_Read(LEFT)<nombrePulse){ 
