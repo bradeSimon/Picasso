@@ -20,7 +20,11 @@ void forward(float speed, float distance); //Fonction pour faire avancer le robo
 void turn(float angle,float speed); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
 
+float kP = 0.001;//0.001
+float kI = 0.0001;
 
+float kP_Turn=0.0005;
+//float kI = 0;
 /*==========================================================================
 Fonction MAIN pour realiser le parcours
 ============================================================================*/
@@ -29,9 +33,43 @@ void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 
 void loop() {
   while (!ROBUS_IsBumper(3)); //Le robot va attendre d'avoir le bumper en arriere avant de partir le code
+  delay(200);
   
-  //Étape du parcour a programmer ici
+  forward(0.8,1.225);
+  turn(0.1,-90);
 
+  forward(0.8,0.90);
+  turn(0.1,90);
+
+  forward(0.8,0.875);
+  turn(0.1,45);
+
+  forward(0.8,1.90);
+  turn(0.1,-90);
+
+  forward(0.8,0.60);
+  turn(0.1,45);
+
+  forward(0.8,1.05);
+  turn(0.1,180);
+  //-------------------------
+  forward(0.8,1.05);
+  turn(0.1,-45);
+
+  forward(0.8,0.60);
+  turn(0.1,90);
+
+  forward(0.8,1.90);
+  turn(0.1,-45);
+
+  forward(0.8,0.875);
+  turn(0.1,-90);
+
+  forward(0.8,0.90);
+  turn(0.1,90);
+
+  forward(0.8,1.225);
+  turn(0.1,180);
 }
 
 /*==========================================================================
@@ -49,16 +87,39 @@ Details:
   entre les deux pour s'assurer quelle soit la meme pour une meme vitesse
 ============================================================================*/
 void forward(float speed, float distance){ 
-  int nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
+  uint32_t nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
+  //Déclaration des variables
+  float memErreur = 0;
+  float diff = 0;
+  float valeurP = 0;
+  float valeurI = 0;
+
+  float rapport_Vitesse=0.3;
+  MOTOR_SetSpeed(LEFT,speed*rapport_Vitesse); //Faire avancer le moteur gauche
+  MOTOR_SetSpeed(RIGHT,speed*rapport_Vitesse); //Faire avancer le moteur droit
   ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
   ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
   
   while(ENCODER_Read(LEFT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
-    MOTOR_SetSpeed(LEFT,speed); //Faire avancer le moteur gauche
-    MOTOR_SetSpeed(RIGHT,speed*1.05); //Faire avancer le moteur droit
+    
+    delay(100);
+
+    diff = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
+    valeurP = (diff * kP);
+    memErreur = memErreur + diff;
+    valeurI = (memErreur * kI);
+    
+    MOTOR_SetSpeed(LEFT,speed*rapport_Vitesse); //Faire avancer le moteur gauche
+    MOTOR_SetSpeed(RIGHT,(rapport_Vitesse*(speed+valeurP+valeurI))); //Faire avancer le moteur droit
+    if(rapport_Vitesse<1 && ENCODER_Read(LEFT)<nombrePulse*0.50){
+        rapport_Vitesse+=0.1;
+    } 
+    if(ENCODER_Read(LEFT)>nombrePulse-5347&&rapport_Vitesse>0.1){
+      rapport_Vitesse+=-0.1;
+    }
   }
   stop(); //Pour arreter de faire tourner le Robot lorsquil arrive a la bonne distance
-
+  delay(100);
 }
 
 
@@ -76,25 +137,40 @@ Details:
   que l'on veux en un nombre de pulse que les deux moteurs doivent donner.
 ============================================================================*/
 void turn(float speed, float angle){
-  int nombrePulse=floor(abs(angle/0.047629)); //Convertion de l'angle en nombre de pulse
+  uint32_t nombrePulse=floor(abs(angle*21.9921)); //Convertion de l'angle en nombre de pulse
+
+  
+  float diff = 0;
+  float valeurP = 0;
+  
   ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
   ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
 
   if(angle>=0){ //Pour tourner dans le sens Horaire
-    while(ENCODER_Read(LEFT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer a tourner
-      MOTOR_SetSpeed(LEFT,speed); //Le moteur gauche va tourner dans le sens Anti-Horaire
-      MOTOR_SetSpeed(RIGHT,-speed*1.05); //Le moteur droit va tourner dans le sens Anti-Horaire
+    
+    while(ENCODER_Read(LEFT)<nombrePulse){ 
+      delay(100);
+      diff = (abs(ENCODER_Read(LEFT)) - abs(ENCODER_Read(RIGHT)));
+      valeurP = (diff * kP_Turn);
+      
+      MOTOR_SetSpeed(LEFT,speed); 
+      MOTOR_SetSpeed(RIGHT,-(speed+valeurP)); 
     }
-    stop(); //Pour arreter de faire tourner le Robot lorsquil arrive au bon angle
-
-  }else{ //Pour tourner dans le sens Anti-Horaire
-    while(ENCODER_Read(RIGHT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer a tourner
-      MOTOR_SetSpeed(LEFT,-speed); //Le moteur gauche a tourner dans le sens Horaire
-      MOTOR_SetSpeed(RIGHT,speed*1.05); //Le moteur droit a tourner dans le sens Horaire
-    }
-    stop(); //Pour arreter de faire tourner le Robot lorsquil arrive au bon angle
-
+    stop(); 
+  }else{
+    
+    while(ENCODER_Read(LEFT)<nombrePulse){ 
+      delay(100);
+      diff = (abs(ENCODER_Read(LEFT)) - abs(ENCODER_Read(RIGHT)));
+      valeurP = (diff * kP_Turn);
+      
+      MOTOR_SetSpeed(LEFT,-speed); 
+      MOTOR_SetSpeed(RIGHT,(speed+valeurP));
+      }
+    stop();
   }
+  stop();
+  delay(100);
 }
 
 /*==========================================================================
