@@ -20,6 +20,7 @@ Details sur le robot:
 void forward(float speed, float distance); //Fonction pour faire avancer le robot en ligne droite sur une distance en metre
 void turn(float speed, float angle); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
+void detecteObstacle(void);
 
 //--Enlever les commentaires des variables selon le robot a programmer--//
 //valeurs PID robot A:
@@ -57,7 +58,7 @@ void loop() {
   while (!ROBUS_IsBumper(3)); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
   delay(300);
   
-  forward(SPEEDFORWARD,1.225);
+  /*forward(SPEEDFORWARD,1.225);
   turn(SPEEDTURN,-90);
   
   forward(SPEEDFORWARD,0.90);
@@ -91,7 +92,10 @@ void loop() {
   turn(SPEEDTURN,90);
   
   forward(SPEEDFORWARD + SPEEDrun,1.225);
-  turn(SPEEDTURN,-180);
+  turn(SPEEDTURN,-180);*/
+
+  detecteObstacle();
+
 }
 
 /*==========================================================================
@@ -253,4 +257,11 @@ void stop(void){
   MOTOR_SetSpeed(LEFT,0); //On met la vitesse du moteur gauche a 0
   MOTOR_SetSpeed(RIGHT,0); //On met la vitesse du moteur droit a 0
 }
+void detecteObstacle(void)
+{
+  float distance = ROBUS_ReadIR(0);
+  int cm = 80 - (distance/6.8) + 10;
+  Serial.println(cm);
+  delay(1000);
 
+}
