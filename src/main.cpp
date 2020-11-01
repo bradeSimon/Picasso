@@ -1,7 +1,7 @@
 /*==========================================================================
 PROJET ROBUS - Parcoura
 
-Code realisee par l'equipe T1
+Code realisee par l'equipe P1
 
 Date: 8/23/2020
 
@@ -20,6 +20,7 @@ Details sur le robot:
 void forward(float speed, float distance); //Fonction pour faire avancer le robot en ligne droite sur une distance en metre
 void turn(float speed, float angle); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
+unsigned int sifflet (void);//Fonction pour detecter le sifflet
 
 //--Enlever les commentaires des variables selon le robot a programmer--//
 //valeurs PID robot A:
@@ -54,44 +55,9 @@ Fonction MAIN pour realiser le parcours
 void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 
 void loop() {
-  while (!ROBUS_IsBumper(3)); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
-  delay(300);
-  
-  forward(SPEEDFORWARD,1.225);
-  turn(SPEEDTURN,-90);
-  
-  forward(SPEEDFORWARD,0.90);
-  turn(SPEEDTURN,90);
-  
-  forward(SPEEDFORWARD,0.97);
-  turn(SPEEDTURN,45);
+  while (sifflet()==1); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
+  turn(0.4,360);
 
-  forward(SPEEDFORWARD,1.84);
-  turn(SPEEDTURN,-90);
-
-  forward(SPEEDFORWARD,0.575);
-  turn(SPEEDTURN,45);
-
-  forward(SPEEDFORWARD,1.245); //1.045
-  turn(SPEEDTURN,-180);
-  //-------------------------
-  forward(SPEEDFORWARD + SPEEDrun,1.245);
-  turn(SPEEDTURN,-45);
-
-  forward(SPEEDFORWARD + SPEEDrun,0.575);
-  turn(SPEEDTURN,90);
-
-  forward(SPEEDFORWARD + SPEEDrun,1.84);
-  turn(SPEEDTURN,-45);
-
-  forward(SPEEDFORWARD + SPEEDrun,0.97);
-  turn(SPEEDTURN,-90);
-
-  forward(SPEEDFORWARD + SPEEDrun,0.90);
-  turn(SPEEDTURN,90);
-  
-  forward(SPEEDFORWARD + SPEEDrun,1.225);
-  turn(SPEEDTURN,-180);
 }
 
 /*==========================================================================
@@ -159,7 +125,6 @@ void forward(float speed, float distance){
   stop(); //Pour arreter de faire avancer le Robot lorsquil arrive a la bonne distance
   //Serial.println("FIN DU TEST");
 }
-
 /*==========================================================================
 Fonction pour faire tourner le Robot
 Input:
@@ -253,4 +218,17 @@ void stop(void){
   MOTOR_SetSpeed(LEFT,0); //On met la vitesse du moteur gauche a 0
   MOTOR_SetSpeed(RIGHT,0); //On met la vitesse du moteur droit a 0
 }
-
+/*==========================================================================
+Fonction pour détecter le coup de sifflet, à mettre condition ==0 ou ==1 dans 
+le while du main, nbvolt est la diff de tension entre bruit ambiant et 5kz, 
+pin ADC 0 et 1
+============================================================================*/
+unsigned int sifflet (void){
+  float nbvolt=0.2;
+  int valeurADC0 = analogRead(0);
+  int valeurADC1 = analogRead(1);
+  if(valeurADC0<valeurADC1+(floor((nbvolt/5)*1024))){
+    return 1;
+  }
+  return 0;
+}
