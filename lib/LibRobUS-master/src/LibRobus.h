@@ -18,6 +18,7 @@ General librairies for Robus robot
 
 // Third party libraries
 #include <IRremote/IRremote.h>
+#include <Grove_I2C_Color_Sensor_TCS3472/Adafruit_TCS34725.h>
 
 
 // Defines

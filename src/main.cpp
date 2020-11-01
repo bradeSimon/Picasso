@@ -15,11 +15,15 @@ Details sur le robot:
 
 #include <Arduino.h>
 #include <LibRobus.h>
-//test
+
+Adafruit_TCS34725 capteurCouleur = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_1X);
+
 //---Declaration des differentes fonctions-----//
 void forward(float speed, float distance); //Fonction pour faire avancer le robot en ligne droite sur une distance en metre
 void turn(float speed, float angle); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
+uint8_t getColor(void);
+uint8_t detectionLigne(void);
 
 //--Enlever les commentaires des variables selon le robot a programmer--//
 //valeurs PID robot A:
@@ -32,7 +36,6 @@ void stop(void); //Fonction pour faire arreter le Robot
 	float kI = 0.00043;
 	float kD = 0.000070;
 //----------------------------------------------------------------------//
-
 float kP_Turn=0.0028;
 float kI_Turn=0; //I nest pas utilise pour les virages
 float kD_Turn=0; //D nest pas utilise pour les virages
@@ -56,42 +59,7 @@ void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 void loop() {
   while (!ROBUS_IsBumper(3)); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
   delay(300);
-  
-  forward(SPEEDFORWARD,1.225);
-  turn(SPEEDTURN,-90);
-  
-  forward(SPEEDFORWARD,0.90);
-  turn(SPEEDTURN,90);
-  
-  forward(SPEEDFORWARD,0.97);
-  turn(SPEEDTURN,45);
-
-  forward(SPEEDFORWARD,1.84);
-  turn(SPEEDTURN,-90);
-
-  forward(SPEEDFORWARD,0.575);
-  turn(SPEEDTURN,45);
-
-  forward(SPEEDFORWARD,1.245); //1.045
-  turn(SPEEDTURN,-180);
-  //-------------------------
-  forward(SPEEDFORWARD + SPEEDrun,1.245);
-  turn(SPEEDTURN,-45);
-
-  forward(SPEEDFORWARD + SPEEDrun,0.575);
-  turn(SPEEDTURN,90);
-
-  forward(SPEEDFORWARD + SPEEDrun,1.84);
-  turn(SPEEDTURN,-45);
-
-  forward(SPEEDFORWARD + SPEEDrun,0.97);
-  turn(SPEEDTURN,-90);
-
-  forward(SPEEDFORWARD + SPEEDrun,0.90);
-  turn(SPEEDTURN,90);
-  
-  forward(SPEEDFORWARD + SPEEDrun,1.225);
-  turn(SPEEDTURN,-180);
+  getColor();
 }
 
 /*==========================================================================
@@ -109,7 +77,7 @@ Details:
   entre les deux pour s'assurer quelle soit la meme pour une meme vitesse
 ============================================================================*/
 void forward(float speed, float distance){ 
-  delay(200); //pas touche!!!
+  delay(250); //pas touche!!!
   uint32_t nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
   //Declaration des variables
   float memErreur = 0;
@@ -122,8 +90,7 @@ void forward(float speed, float distance){
 
   ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
   ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
-  delay(200); //pas touche!!!
-
+  delay(250); //pas touche!!!
   while(ENCODER_Read(LEFT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
     
     delay(100);
@@ -178,7 +145,7 @@ void turn(float speed, float angle){
   if(angle<0){ angle+=correctAngle;}
   else if(angle>0){angle-=correctAngle;}
 
-  delay(200); //pas touche!!!
+  delay(250); //pas touche!!!
   int32_t nombrePulse=floor(abs(angle*21.8)); //21.99 ---> 20.8 
   //Serial.println(nombrePulse);
   
@@ -191,7 +158,7 @@ void turn(float speed, float angle){
   ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
   ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
 
-  delay(200);//pas touche!!!
+  delay(250);//pas touche!!!
 
   if(angle>=0){ //Pour tourner dans le sens Horaire
     while(ENCODER_Read(LEFT)<nombrePulse){ 
@@ -244,6 +211,134 @@ void turn(float speed, float angle){
       }
     stop();
   }
+}
+/*==========================================================================
+Fonction de detection de couleur (pour le capteur Adafruit_TCS34725)
+Input:
+  Aucun input
+Output:
+  -Retourne 1 si la couleur rose est detectee
+  -Retourne 2 si la couleur jaune est detectee
+  -Retourne 3 si la couleur bleu est detectee
+  -Retourne 0 si la couleur nest pas rose, jaune ou bleu 
+Details:
+  Fait laquisition de la couleur 10 fois et retourne un chiffre correspondant
+  a celle-ci si au moins la moite des mesures correspondent a une des trois
+  possibilites
+============================================================================*/
+uint8_t getColor(void){
+  if (capteurCouleur.begin()) {
+    //Serial.println("Found sensor");
+  } else {
+    //Serial.println("No TCS34725 found ... check your connections");
+    while (1);
+  }
+  
+  uint16_t r, g, b, c, colorTemp, lux;
+  //Valeurs temporaires (les bons chiffres vont etre places directement dans les conditions)
+  uint16_t RoseR = 125;
+  uint16_t RoseB = 114;
+  uint16_t RoseG = 128;
+  uint16_t BleuR = 91;
+  uint16_t BleuB = 131;
+  uint16_t BleuG = 140;
+  uint16_t JauneR = 136;
+  uint16_t JauneB = 147;
+  uint16_t JauneG = 111;
+  //---------------------------------------------------------------------------------------//
+  uint16_t tolCoul = 5;//60
+  uint8_t roseAdd = 0;
+  uint8_t bleuAdd = 0;
+  uint8_t jauneAdd = 0;
+
+  for(uint8_t i = 0; i < 9; i++){
+    capteurCouleur.getRawData(&r, &g, &b, &c);
+    if((r - tolCoul < RoseR) && (RoseR < r + tolCoul) && (g - tolCoul < RoseB) && (RoseB < g + tolCoul) && (b - tolCoul < RoseG) && (RoseG < b + tolCoul)){
+      roseAdd ++;
+    }
+    else if((r - tolCoul < BleuR) && (BleuR < r + tolCoul) && (g - tolCoul < BleuB) && (BleuB < g + tolCoul) && (b - tolCoul < BleuG) && (BleuG < b + tolCoul)){
+      bleuAdd ++;
+    }
+    else if((r - tolCoul < JauneR) && (JauneR < r + tolCoul) && (g - tolCoul < JauneB) && (JauneB < g + tolCoul) && (b - tolCoul < JauneG) && (JauneG < b + tolCoul)){
+      jauneAdd ++;
+    }
+    else;
+  }
+  if(roseAdd > 5){
+    Serial.println("rose");
+    digitalWrite(22,HIGH);//Led rouge allume
+    digitalWrite(23,LOW);//Led bleu fermee
+    digitalWrite(24,LOW);//Led jaune fermee
+    return 1;
+  }
+  else if(bleuAdd > 5){
+    Serial.println("bleu");
+    digitalWrite(22,LOW);//Led rouge fermee
+    digitalWrite(23,HIGH);//Led bleu allumee
+    digitalWrite(24,LOW);//Led jaune fermee
+    return 2;
+  }
+  else if(jauneAdd > 5){
+    Serial.println("jaune");
+    digitalWrite(22,LOW);//Led rouge fermee
+    digitalWrite(23,LOW);//Led bleu fermee
+    digitalWrite(24,HIGH);//Led jaune allumee
+    return 3;
+  } 
+  else{
+    Serial.println("No match found");
+    digitalWrite(22,LOW);//Led rouge fermee
+    digitalWrite(23,LOW);//Led bleu fermee
+    digitalWrite(24,LOW);//Led jaune fermee
+    return 0;
+  }
+}
+/*==========================================================================
+Fonction de detection de ligne(s)
+Input:
+  Aucun input
+Output:
+  -Retourne 0 si aucune ligne est detectee
+  -Retourne 1 si ligne (B) est detectee
+  -Retourne 2 si ligne (J) est detectee
+  -Retourne 3 si ligne (R) est detectee
+  -Retourne 4 si lignes (RB) sont detectees
+  -Retourne 5 si lignes (RB) sont detectees
+  -Retourne 6 si lignes (RJ) sont detectees
+  -Retourne 7 si 3 lignes sont detectees 
+Details:
+  Fait laquisition de la tension sur la broche A2 et retourne un chiffre 
+  correspondant a la combinaison de capteur qui detectent un ligne
+============================================================================*/
+uint8_t detectionLigne(void){
+  uint16_t tension = analogRead(2);
+  uint8_t tolTen = 20;
+  //Serial.println(tension);
+  if(tension < 50){
+    return 0;//Aucun
+  }
+  else if((tension - tolTen < 142) && (142 < tension + tolTen)){
+    return 1; //B
+  }
+  else if((tension - tolTen < 284) && (284 < tension + tolTen)){
+    return 2; //J
+  }
+  else if((tension - tolTen < 570) && (570 < tension + tolTen)){
+    return 3; //R
+  }
+  else if((tension - tolTen < 426) && (426 < tension + tolTen)){
+    return 4; //JB
+  }
+  else if((tension - tolTen < 711) && (711 < tension + tolTen)){
+    return 5; //RB
+  }
+  else if((tension - tolTen < 852) && (852 < tension + tolTen)){
+    return 6; //RJ
+  }
+  else if((tension - tolTen < 994) && (994 < tension + tolTen)){
+    return 7; //RJB
+  }
+  else;
 }
 
 /*==========================================================================
