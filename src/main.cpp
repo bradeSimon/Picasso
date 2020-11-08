@@ -22,11 +22,15 @@ Adafruit_TCS34725 capteurCouleur = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50
 void forward(float speed, float distance); //Fonction pour faire avancer le robot en ligne droite sur une distance en metre
 void turn(float speed, float angle); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
+<<<<<<< HEAD
 unsigned int sifflet (void);//Fonction pour detecter le sifflet
 void takeBall(void);
 void dropBall(void);
 uint8_t getColor(void);
 uint8_t detectionLigne(void);
+=======
+bool detecteObstacle(void);
+>>>>>>> capteurObstacle
 
 //--Enlever les commentaires des variables selon le robot a programmer--//
 //valeurs PID robot A:
@@ -64,9 +68,17 @@ void loop() {
   SERVO_SetAngle(0,35);
   while (!ROBUS_IsBumper(3)); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
   delay(300);
+<<<<<<< HEAD
   short couleur=2;
   //Se Redre jusqua la couleur
   forward(SPEEDFORWARD,0.40);
+=======
+  
+  forward(SPEEDTURN,4);
+  turn(SPEEDTURN,-90);
+  
+  /*forward(SPEEDFORWARD,0.90);
+>>>>>>> capteurObstacle
   turn(SPEEDTURN,90);
   forward(SPEEDFORWARD,0.20);
 
@@ -93,9 +105,17 @@ void loop() {
   case 2: //Rouge
   forward(SPEEDFORWARD,2.4);
   turn(SPEEDTURN,90);
+<<<<<<< HEAD
   forward(SPEEDFORWARD,0.3);
   break;
 }
+=======
+  
+  forward(SPEEDFORWARD + SPEEDrun,1.225);
+  turn(SPEEDTURN,-180);*/
+
+  detecteObstacle();
+>>>>>>> capteurObstacle
 
 }
 
@@ -149,6 +169,14 @@ void forward(float speed, float distance){
       valeurI = -capValeurI;
     }
     else;
+
+    if(detecteObstacle()== true)
+    {
+      break;
+    }
+    else{
+
+    }
 
     MOTOR_SetSpeed(LEFT,(speed*rapport_Vitesse)); //Faire avancer le moteur gauche
     MOTOR_SetSpeed(RIGHT,(rapport_Vitesse*(speed+valeurP+valeurI+valeurD))); //Faire avancer le moteur droit
@@ -384,6 +412,7 @@ void stop(void){
   MOTOR_SetSpeed(LEFT,0); //On met la vitesse du moteur gauche a 0
   MOTOR_SetSpeed(RIGHT,0); //On met la vitesse du moteur droit a 0
 }
+<<<<<<< HEAD
 void takeBall(void){
    SERVO_SetAngle(0,85);
 }
@@ -405,4 +434,19 @@ unsigned int sifflet (void){
     return 1;
   }
   return 0;
+=======
+/*==========================================================================
+Fonction de détection d'obstacle avec le capteur infra-rouge.
+============================================================================*/
+bool detecteObstacle(void)
+{
+  int distance = ROBUS_ReadIR(0);
+
+  if(distance >= 85){
+    return true;
+  }
+  else{
+    return false;
+  }
+>>>>>>> capteurObstacle
 }
