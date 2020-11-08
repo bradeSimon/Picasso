@@ -22,6 +22,8 @@ Adafruit_TCS34725 capteurCouleur = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50
 void forward(float speed, float distance); //Fonction pour faire avancer le robot en ligne droite sur une distance en metre
 void turn(float speed, float angle); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
+void takeBall(void);
+void dropBall(void);
 uint8_t getColor(void);
 uint8_t detectionLigne(void);
 
@@ -57,9 +59,43 @@ Fonction MAIN pour realiser le parcours
 void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 
 void loop() {
+  SERVO_Enable(0); //activation du servomoteur pour le bras 
+  SERVO_SetAngle(0,35);
   while (!ROBUS_IsBumper(3)); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
   delay(300);
-  getColor();
+  short couleur=2;
+  //Se Redre jusqua la couleur
+  forward(SPEEDFORWARD,0.40);
+  turn(SPEEDTURN,90);
+  forward(SPEEDFORWARD,0.20);
+
+  turn(SPEEDTURN,-90);
+  forward(SPEEDFORWARD,0.5);
+  delay(1000);
+
+  
+  forward(SPEEDFORWARD,1.3);
+  takeBall();
+
+  //Condition pour chaque couleur
+  switch(couleur){
+  case 0: //Jaune
+  forward(SPEEDFORWARD,0.9);
+  turn(SPEEDTURN,90);
+  forward(SPEEDFORWARD,0.3);
+  break;
+  case 1: //Bleu
+  forward(SPEEDFORWARD,1.65);
+  turn(SPEEDTURN,-90);
+  forward(SPEEDFORWARD,0.3);
+  break;
+  case 2: //Rouge
+  forward(SPEEDFORWARD,2.4);
+  turn(SPEEDTURN,90);
+  forward(SPEEDFORWARD,0.3);
+  break;
+}
+
 }
 
 /*==========================================================================
@@ -347,5 +383,13 @@ Fonction pour faire arreter le robot
 void stop(void){
   MOTOR_SetSpeed(LEFT,0); //On met la vitesse du moteur gauche a 0
   MOTOR_SetSpeed(RIGHT,0); //On met la vitesse du moteur droit a 0
+}
+void takeBall(void){
+   SERVO_SetAngle(0,85);
+   delay(2000);
+}
+void dropBall(void){
+   SERVO_SetAngle(0,35);
+   delay(2000);
 }
 
