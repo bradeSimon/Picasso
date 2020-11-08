@@ -1,7 +1,7 @@
 /*==========================================================================
 PROJET ROBUS - Parcoura
 
-Code realisee par l'equipe T1
+Code realisee par l'equipe P1
 
 Date: 8/23/2020
 
@@ -22,6 +22,7 @@ Adafruit_TCS34725 capteurCouleur = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50
 void forward(float speed, float distance); //Fonction pour faire avancer le robot en ligne droite sur une distance en metre
 void turn(float speed, float angle); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
+unsigned int sifflet (void);//Fonction pour detecter le sifflet
 void takeBall(void);
 void dropBall(void);
 uint8_t getColor(void);
@@ -162,7 +163,6 @@ void forward(float speed, float distance){
   stop(); //Pour arreter de faire avancer le Robot lorsquil arrive a la bonne distance
   //Serial.println("FIN DU TEST");
 }
-
 /*==========================================================================
 Fonction pour faire tourner le Robot
 Input:
@@ -386,10 +386,23 @@ void stop(void){
 }
 void takeBall(void){
    SERVO_SetAngle(0,85);
-   delay(2000);
 }
+   delay(2000);
 void dropBall(void){
    SERVO_SetAngle(0,35);
    delay(2000);
 }
-
+/*==========================================================================
+Fonction pour détecter le coup de sifflet, à mettre condition ==0 ou ==1 dans 
+le while du main, nbvolt est la diff de tension entre bruit ambiant et 5kz, 
+pin ADC 0 et 1
+============================================================================*/
+unsigned int sifflet (void){
+  float nbvolt=0.2;
+  int valeurADC0 = analogRead(0);
+  int valeurADC1 = analogRead(1);
+  if(valeurADC0<valeurADC1+(floor((nbvolt/5)*1024))){
+    return 1;
+  }
+  return 0;
+}
