@@ -20,7 +20,7 @@ Adafruit_TCS34725 capteurCouleur = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50
 
 //---Declaration des differentes fonctions-----//
 void forward(float speed, float distance); //Fonction pour faire avancer le robot en ligne droite sur une distance en metre
-void forwardB(float speed, float distance);
+void forwardB(float speed);
 void turn(float speed, float angle); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
 unsigned int sifflet (void);//Fonction pour detecter le sifflet
@@ -61,47 +61,38 @@ Fonction MAIN pour realiser le parcours
 
 void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 
-void loop() {
-  SERVO_Enable(0); //activation du servomoteur pour le bras 
-  SERVO_SetAngle(0,35);
-  while (!ROBUS_IsBumper(3)); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
-   
-while (!ROBUS_IsBumper(3)); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
-delay(300);
-short couleur=2;
-//Se Redre jusqua la couleur
-forward(SPEEDFORWARD,0.40);
-turn(SPEEDTURN,90);
-forward(SPEEDFORWARD,0.20);
+void loop() 
+{
+  //delay(1000);
 
-turn(SPEEDTURN,-90);
-forward(SPEEDFORWARD,0.5);
-delay(1000);
+  while(sifflet() == 0)
+  {
 
-//Balon
-forward(SPEEDFORWARD,1.3);
+  }
+  forwardB(0.22);
+  
+  if(ENCODER_Read(LEFT)> (2.1*13367.32) && ENCODER_Read(LEFT)< (2.5*13367.32))
+  {
+    delay(10000);
+    turn(0.3,-90);
+    forward(0.3,0.8);
+  }
+  else if(ENCODER_Read(LEFT) > (3.8*13367.32) && ENCODER_Read(LEFT)< (4.5*13367.32))
+  {
 
-//Condition pour chaque couleur
-switch(couleur){
-case 0: //Jaune
-forward(SPEEDFORWARD,0.9);
-turn(SPEEDTURN,90);
-forward(SPEEDFORWARD,0.3);
-break;
-case 1: //Bleu
-forward(SPEEDFORWARD,1.65);
-turn(SPEEDTURN,-90);
-forward(SPEEDFORWARD,0.3);
-break;
-case 2: //Rouge
-forward(SPEEDFORWARD,2.4);
-turn(SPEEDTURN,90);
-forward(SPEEDFORWARD,0.3);
-break;
-
-}
-
-
+    int distanceParcourue = ENCODER_Read(LEFT);
+    turn(0.3,-90);
+    forward(0.3,0.8);
+    turn(0.3,90);
+    forward(0.3,4.85-(distanceParcourue/13367.32));
+  }
+  else
+  {  
+    turn(0.3,-90);
+    forward(0.3,0.8);
+  }
+  
+  
 
 }
 
@@ -113,7 +104,7 @@ Input:
 Details:
   Comme on connait le nombre de pulse par tour de roue ainsi que le diametre 
   des roues, il est possible de calculer que pour avancer d'un metre le robot
-  nescessitera de 13367.32 pulse. On peut donc convertir la valeur en mettre en
+  nescessitera de 13367.32 pulses. On peut donc convertir la valeur en mettre en
   un nombre de pulse.
   Il est egalement important de noter que la vitesse du moteur droit est
   multiplier par une constante. Cette valuer permet d'equilibrer la vitesse
@@ -156,14 +147,6 @@ void forward(float speed, float distance){
     }
     else;
 
-    if(detecteObstacle()== true)
-    {
-      break;
-    }
-    else{
-
-    }
-
     MOTOR_SetSpeed(LEFT,(speed*rapport_Vitesse)); //Faire avancer le moteur gauche
     MOTOR_SetSpeed(RIGHT,(rapport_Vitesse*(speed+valeurP+valeurI+valeurD))); //Faire avancer le moteur droit
     
@@ -178,9 +161,9 @@ void forward(float speed, float distance){
   //Serial.println("FIN DU TEST");
 }
 
-void forwardB(float speed, float distance){ 
+void forwardB(float speed){ 
 delay(200); //pas touche!!!
-uint32_t nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
+uint32_t nombrePulse=floor((4.65)*13367.32); //Convertion distance en nombre de pulse
 //Declaration des variables
 float memErreur = 0;
 float erreurAvant = 0;
@@ -195,28 +178,56 @@ ENCODER_Reset(1);
 
 delay(200); //pas touche!!!
 
-while(ENCODER_Read(LEFT)<nombrePulse && !ROBUS_IsBumper(3)){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
-delay(100);
+while(ENCODER_Read(LEFT)<nombrePulse)
+{ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
+  delay(100);
 
-diff = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
+  diff = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
 
-//Serial.println(diff);
+  //Serial.println(diff);
+  
+  valeurP = (diff * kP);
+  valeurD = ((erreurAvant - diff)*kD);
+  erreurAvant = diff; 
+  memErreur = (memErreur + diff);
+  valeurI = (memErreur * kI);
+  if(valeurI > capValeurI)
+  {
+    valeurI = capValeurI;
+  }
+  else if(valeurI < -capValeurI)
+  {
+    valeurI = -capValeurI;
+  }
+  else;
 
-valeurP = (diff * kP);
-valeurD = ((erreurAvant - diff)*kD);
-erreurAvant = diff; 
-memErreur = (memErreur + diff);
-valeurI = (memErreur * kI);
-if(valeurI > capValeurI){
-valeurI = capValeurI;
-}
-else if(valeurI < -capValeurI){
-valeurI = -capValeurI;
-}
-else;
+  /*if(detectionLigne() == 5)
+  {
+    MOTOR_SetSpeed(LEFT,(speed)); //Faire avancer le moteur gauche
+    MOTOR_SetSpeed(RIGHT,(speed+valeurP+valeurI+valeurD)); //Faire avancer le moteur droit
+  }
+  else if (detectionLigne() == 6)
+  {
+    MOTOR_SetSpeed(LEFT,(speed)); //Faire avancer le moteur gauche
+    MOTOR_SetSpeed(RIGHT,(speed+valeurP+valeurI+valeurD)); //Faire avancer le moteur droit
+  }
+  else
+  {
+    MOTOR_SetSpeed(LEFT,(speed)); //Faire avancer le moteur gauche
+    MOTOR_SetSpeed(RIGHT,(speed+valeurP+valeurI+valeurD)); //Faire avancer le moteur droit
+  }*/
+  MOTOR_SetSpeed(LEFT,(speed)); //Faire avancer le moteur gauche
+  MOTOR_SetSpeed(RIGHT,(speed+valeurP+valeurI+valeurD)); //Faire avancer le moteur droit
 
-MOTOR_SetSpeed(LEFT,(speed)); //Faire avancer le moteur gauche
-MOTOR_SetSpeed(RIGHT,(speed+valeurP+valeurI+valeurD)); //Faire avancer le moteur droit
+  if(detecteObstacle()== true)
+  {
+    break;
+  }
+  else
+  {
+    
+  }
+  
 }
 stop(); 
 }
@@ -406,8 +417,9 @@ Details:
 ============================================================================*/
 uint8_t detectionLigne(void){
   uint16_t tension = analogRead(2);
-  uint8_t tolTen = 20;
-  //Serial.println(tension);
+  uint8_t tolTen = 40;
+  Serial.println(tension);
+
   if(tension < 50){
     return 0;//Aucun
   }
@@ -429,10 +441,8 @@ uint8_t detectionLigne(void){
   else if((tension - tolTen < 852) && (852 < tension + tolTen)){
     return 6; //RJ
   }
-  else if((tension - tolTen < 994) && (994 < tension + tolTen)){
-    return 7; //RJB
-  }
-  else;
+  else return 7; //RJB
+  
 }
 
 /*==========================================================================
@@ -459,7 +469,8 @@ unsigned int sifflet (void){
   float nbvolt=0.2;
   int valeurADC0 = analogRead(0);
   int valeurADC1 = analogRead(1);
-  if(valeurADC0<valeurADC1+(floor((nbvolt/5)*1024))){
+
+  if(valeurADC1>500){
     return 1;
   }
   return 0;
@@ -469,12 +480,24 @@ Fonction de détection d'obstacle avec le capteur infra-rouge.
 ============================================================================*/
 bool detecteObstacle(void)
 {
-  int distance = ROBUS_ReadIR(0);
-
-  if(distance >= 85){
+  /*int distance = ROBUS_ReadIR(0);
+  Serial.println(distance);
+  if(distance >= 85)
+  {
     return true;
   }
-  else{
+  else
+  {
+    return false;
+  }*/
+
+  int distance2 = SONAR_GetRange(SONAR_1);
+  if(distance2 <= 58)
+  {
+    return true;
+  }
+  else
+  {
     return false;
   }
 }
