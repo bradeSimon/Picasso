@@ -61,10 +61,10 @@ Fonction MAIN pour realiser le parcours
 
 void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 
-void loop() {
-  SERVO_Enable(0); //activation du servomoteur pour le bras 
+void loop() { 
+ SERVO_Enable(0); //activation du servomoteur pour le bras 
   SERVO_SetAngle(0,35);
-  while (!ROBUS_IsBumper(3)); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
+  /*while (!ROBUS_IsBumper(3)); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
    
 while (!ROBUS_IsBumper(3)); //Le robot va attendre que le bumper en arriere soit active avant de partir le code
 delay(300);
@@ -99,10 +99,14 @@ turn(SPEEDTURN,90);
 forward(SPEEDFORWARD,0.3);
 break;
 
+
 }
+*/
 
+while(!ROBUS_IsBumper(1));
+getColor();
 
-
+//forwardB(SPEEDFORWARD, 4.8);
 }
 
 /*==========================================================================
@@ -180,7 +184,7 @@ void forward(float speed, float distance){
 
 void forwardB(float speed, float distance){ 
 delay(200); //pas touche!!!
-uint32_t nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
+int nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
 //Declaration des variables
 float memErreur = 0;
 float erreurAvant = 0;
@@ -195,7 +199,7 @@ ENCODER_Reset(1);
 
 delay(200); //pas touche!!!
 
-while(ENCODER_Read(LEFT)<nombrePulse && !ROBUS_IsBumper(3)){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
+while(ENCODER_Read(LEFT)<nombrePulse && detecteObstacle() == false){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
 delay(100);
 
 diff = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
@@ -321,66 +325,84 @@ Details:
   possibilites
 ============================================================================*/
 uint8_t getColor(void){
+
+  uint16_t r, g, b, c, colorTemp, lux;
+  //Valeurs temporaires (les bons chiffres vont etre places directement dans les conditions)
+  uint16_t RoseR = 95;
+  uint16_t RoseB = 99;
+  uint16_t RoseG = 91;
+  uint16_t BleuR = 71;
+  uint16_t BleuB = 105;
+  uint16_t BleuG = 100;
+  uint16_t JauneR = 101;
+  uint16_t JauneB = 86;
+  uint16_t JauneG = 110;
+  //---------------------------------------------------------------------------------------//
+  uint16_t tolCoul = 12;//60
+  uint8_t roseAdd = 0;
+  uint8_t bleuAdd = 0;
+  uint8_t jauneAdd = 0;
+
+  /*capteurCouleur.getRawData(&r, &g, &b, &c);
+
+   Serial.println("R: "); Serial.println(r, DEC); Serial.println(" ");
+
+   Serial.println("G: "); Serial.println(g, DEC); Serial.println(" ");
+
+   Serial.println("B: "); Serial.println(b, DEC); Serial.println(" ");
+
+   Serial.println(" ");*/
+
+  for(uint8_t i = 0; i < 100; i++){
+    if (capteurCouleur.begin()) {
+    //Serial.println("Found sensor");
+  } else {
+    //Serial.println("No TCS34725 found ... check your connections");
+    while (1);
+  }
+    capteurCouleur.getRawData(&r, &g, &b, &c);
+    int tmp=(r+g+b)/3;
+    if(tmp>=94&&tmp<=98 ){
+      roseAdd ++;
+    }
+    if(tmp<94){
+      bleuAdd ++;
+    }
+    if(tmp>98){
+      jauneAdd ++;
+    }
+  }
   if (capteurCouleur.begin()) {
     //Serial.println("Found sensor");
   } else {
     //Serial.println("No TCS34725 found ... check your connections");
     while (1);
   }
-  
-  uint16_t r, g, b, c, colorTemp, lux;
-  //Valeurs temporaires (les bons chiffres vont etre places directement dans les conditions)
-  uint16_t RoseR = 125;
-  uint16_t RoseB = 114;
-  uint16_t RoseG = 128;
-  uint16_t BleuR = 91;
-  uint16_t BleuB = 131;
-  uint16_t BleuG = 140;
-  uint16_t JauneR = 136;
-  uint16_t JauneB = 147;
-  uint16_t JauneG = 111;
-  //---------------------------------------------------------------------------------------//
-  uint16_t tolCoul = 5;//60
-  uint8_t roseAdd = 0;
-  uint8_t bleuAdd = 0;
-  uint8_t jauneAdd = 0;
-
-  for(uint8_t i = 0; i < 9; i++){
     capteurCouleur.getRawData(&r, &g, &b, &c);
-    if((r - tolCoul < RoseR) && (RoseR < r + tolCoul) && (g - tolCoul < RoseB) && (RoseB < g + tolCoul) && (b - tolCoul < RoseG) && (RoseG < b + tolCoul)){
-      roseAdd ++;
-    }
-    else if((r - tolCoul < BleuR) && (BleuR < r + tolCoul) && (g - tolCoul < BleuB) && (BleuB < g + tolCoul) && (b - tolCoul < BleuG) && (BleuG < b + tolCoul)){
-      bleuAdd ++;
-    }
-    else if((r - tolCoul < JauneR) && (JauneR < r + tolCoul) && (g - tolCoul < JauneB) && (JauneB < g + tolCoul) && (b - tolCoul < JauneG) && (JauneG < b + tolCoul)){
-      jauneAdd ++;
-    }
-    else;
-  }
-  if(roseAdd > 5){
-    Serial.println("rose");
+
+  if(roseAdd > 50){
+    //Serial.println("rose");
     digitalWrite(22,HIGH);//Led rouge allume
     digitalWrite(23,LOW);//Led bleu fermee
     digitalWrite(24,LOW);//Led jaune fermee
     return 1;
   }
-  else if(bleuAdd > 5){
-    Serial.println("bleu");
+  else if(bleuAdd > 50){
+    //Serial.println("bleu");
     digitalWrite(22,LOW);//Led rouge fermee
     digitalWrite(23,HIGH);//Led bleu allumee
     digitalWrite(24,LOW);//Led jaune fermee
     return 2;
   }
-  else if(jauneAdd > 5){
-    Serial.println("jaune");
+  else if(jauneAdd > 50){
+    //Serial.println("jaune");
     digitalWrite(22,LOW);//Led rouge fermee
     digitalWrite(23,LOW);//Led bleu fermee
     digitalWrite(24,HIGH);//Led jaune allumee
     return 3;
   } 
   else{
-    Serial.println("No match found");
+    //Serial.println("No match found");
     digitalWrite(22,LOW);//Led rouge fermee
     digitalWrite(23,LOW);//Led bleu fermee
     digitalWrite(24,LOW);//Led jaune fermee
