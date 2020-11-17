@@ -181,6 +181,8 @@ delay(200); //pas touche!!!
 while(ENCODER_Read(LEFT)<nombrePulse)
 { //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
   delay(100);
+  while(ENCODER_Read(LEFT)<nombrePulse && (detecteObstacle()== false)){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
+  delay(100);
 
   diff = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
 
@@ -200,22 +202,6 @@ while(ENCODER_Read(LEFT)<nombrePulse)
     valeurI = -capValeurI;
   }
   else;
-
-  /*if(detectionLigne() == 5)
-  {
-    MOTOR_SetSpeed(LEFT,(speed)); //Faire avancer le moteur gauche
-    MOTOR_SetSpeed(RIGHT,(speed+valeurP+valeurI+valeurD)); //Faire avancer le moteur droit
-  }
-  else if (detectionLigne() == 6)
-  {
-    MOTOR_SetSpeed(LEFT,(speed)); //Faire avancer le moteur gauche
-    MOTOR_SetSpeed(RIGHT,(speed+valeurP+valeurI+valeurD)); //Faire avancer le moteur droit
-  }
-  else
-  {
-    MOTOR_SetSpeed(LEFT,(speed)); //Faire avancer le moteur gauche
-    MOTOR_SetSpeed(RIGHT,(speed+valeurP+valeurI+valeurD)); //Faire avancer le moteur droit
-  }*/
   MOTOR_SetSpeed(LEFT,(speed)); //Faire avancer le moteur gauche
   MOTOR_SetSpeed(RIGHT,(speed+valeurP+valeurI+valeurD)); //Faire avancer le moteur droit
 
@@ -228,10 +214,10 @@ while(ENCODER_Read(LEFT)<nombrePulse)
     
   }
   
+  }
+  stop(); 
+  }
 }
-stop(); 
-}
-
 /*==========================================================================
 Fonction pour faire tourner le Robot
 Input:
@@ -480,24 +466,17 @@ Fonction de détection d'obstacle avec le capteur infra-rouge.
 ============================================================================*/
 bool detecteObstacle(void)
 {
-  /*int distance = ROBUS_ReadIR(0);
-  Serial.println(distance);
-  if(distance >= 85)
-  {
-    return true;
-  }
-  else
-  {
-    return false;
-  }*/
-
-  int distance2 = SONAR_GetRange(SONAR_1);
+int distance2 = SONAR_GetRange(SONAR_1);
   if(distance2 <= 58)
   {
-    return true;
-  }
-  else
-  {
-    return false;
+    int distance = ROBUS_ReadIR(0);
+    Serial.println(ROBUS_ReadIR(3));
+    if(distance >= 85){
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
 }
