@@ -24,6 +24,9 @@ void forwardB(float speed);
 void forwardHenri(float speed, float distance);
 void turn(float speed, float angle); //Fonction pour faire tourner le robot selon un angle precis.
 void stop(void); //Fonction pour faire arreter le Robot
+void triangle();
+void carre();
+void pentagone();
 unsigned int sifflet (void);//Fonction pour detecter le sifflet
 void takeBall(void);
 void dropBall(void);
@@ -69,11 +72,17 @@ void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 /*
 ROBOT B
 */
+<<<<<<< Updated upstream
 void loop() 
 {
 //forward(0.4, 1);
   trapeze();
 
+=======
+void loop() {
+  while(ROBUS_IsBumper(3)!=true);
+  pentagone();
+>>>>>>> Stashed changes
 }
 
 /*==========================================================================
@@ -562,6 +571,7 @@ void triangle(){
   forward(0.4, 1);
   delay(30);
 }
+<<<<<<< Updated upstream
 
 void carre(){
   //Commence par le point milieu de l'arête du haut du tableau
@@ -617,6 +627,52 @@ delay(30);
 forward(0.4,0.25);
 delay(30);
 
+=======
+>>>>>>> Stashed changes
 
+void carre(){
+  //Commence au milieu de l'arrete du top du carre
+  delay(30);
+  turn(0.2, -90);
+  delay(30);
+  forward(0.4, 0.5);
+  delay(30);
+  turn(0.2, 90);
+  delay(30);
+  forward(0.4, 1);
+  delay(30);
+  turn(0.2, 90);
+  delay(30);
+  forward(0.4, 1);
+  delay(30);
+  turn(0.2, 90);
+  delay(30);
+  forward(0.4, 1);
+  delay(30);
+  turn(0.2, 90);
+  delay(30);
+  forward(0.4, 0.5);
+}
 
+void pentagone(){
+  //Commence au coin du top du pentagone
+  turn(0.2, -54);
+  delay(30);
+  forward(0.4, 0.5);
+  delay(30);
+  turn(0.2, 72);
+  delay(30);
+  forward(0.4, 0.5);
+  delay(30);
+  turn(0.2, 72);
+  delay(30);
+  forward(0.4, 0.5);
+  delay(30);
+  turn(0.2, 72);
+  delay(30);
+  forward(0.4, 0.5);
+  delay(30);
+  turn(0.2, 72);
+  delay(30);
+  forward(0.4, 0.5);
 }
