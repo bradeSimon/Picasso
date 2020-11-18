@@ -33,6 +33,7 @@ bool detecteObstacle(void);
 
 void triangle(void);
 void carre(void);
+void trapeze(void);
 
 //--Enlever les commentaires des variables selon le robot a programmer--//
 //valeurs PID robot A:
@@ -71,7 +72,7 @@ ROBOT B
 void loop() 
 {
 //forward(0.4, 1);
-
+  trapeze();
 
 }
 
@@ -563,6 +564,7 @@ void triangle(){
 }
 
 void carre(){
+  //Commence par le point milieu de l'arête du haut du tableau
   delay(30);
   turn(0.2, -90);
   delay(30);
@@ -581,4 +583,40 @@ void carre(){
   turn(0.2, 90);
   delay(30);
   forward(0.4, 0.5);
+}
+
+void trapeze(void){
+  //Commence par l'arête du haut du milieu du tableau
+  delay(30);
+  turn(0.2, -90);
+  delay(30);
+  forward(0.4, 0.5);
+  //Est positionné au point central du tableau
+
+  delay(30);
+//descend le crayon
+delay(30);
+turn(0.2,90);
+delay(30);
+forward(0.4,0.25);
+delay(30);
+turn(0.2,45);
+delay(30);
+forward(0.4,0.5);
+delay(30);
+turn(0.2,135);
+delay(30);
+forward(0.4,1);
+delay(30);
+turn(0.2,135);
+delay(30);
+forward(0.4,0.5);
+delay(30);
+turn(0.2,45);
+delay(30);
+forward(0.4,0.25);
+delay(30);
+
+
+
 }
