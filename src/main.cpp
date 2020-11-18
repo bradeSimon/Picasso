@@ -31,6 +31,9 @@ uint8_t getColor(void);
 uint8_t detectionLigne(void);
 bool detecteObstacle(void);
 
+void triangle(void);
+void carre(void);
+
 //--Enlever les commentaires des variables selon le robot a programmer--//
 //valeurs PID robot A:
 	/*float kP = 0.002;
@@ -541,9 +544,41 @@ bool detecteObstacle(void)
   }*/
 }
 
+
 void triangle(){
-  
+  //Commence par le coin du top
+  delay(30);
+  turn(0.2, -30);
+  delay(30);
+  forward(0.4, 1);
+  delay(30);
+  turn(0.2, 120);
+  delay(30);
+  forward(0.4, 1);
+  delay(30);
+  turn(0.2, 120);
+  delay(30);
+  forward(0.4, 1);
+  delay(30);
+}
 
-
-
+void carre(){
+  delay(30);
+  turn(0.2, -90);
+  delay(30);
+  forward(0.4, 0.5);
+  delay(30);
+  turn(0.2, 90);
+  delay(30);
+  forward(0.4, 1);
+  delay(30);
+  turn(0.2, 90);
+  delay(30);
+  forward(0.4, 1);
+  turn(0.2, 90);
+  delay(30);
+  forward(0.4, 1);
+  turn(0.2, 90);
+  delay(30);
+  forward(0.4, 0.5);
 }
