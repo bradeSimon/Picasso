@@ -29,6 +29,7 @@ void dropBall(void);
 uint8_t getColor(void);
 uint8_t detectionLigne(void);
 bool detecteObstacle(void);
+void forwardX(float speed, float distance);
 
 //--Enlever les commentaires des variables selon le robot a programmer--//
 //valeurs PID robot A:
@@ -63,12 +64,13 @@ void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 
 void loop() 
 {
-  //delay(1000);
+  delay(1000);
 
-  while(sifflet() == 0)
+ /* while(sifflet() == 0)
   {
 
-  }
+  }*/
+  forward(1,0.4);
   forwardB(0.22);
   
   if(ENCODER_Read(LEFT)> (2.1*13367.32) && ENCODER_Read(LEFT)< (2.5*13367.32))
@@ -160,7 +162,52 @@ void forward(float speed, float distance){
   stop(); //Pour arreter de faire avancer le Robot lorsquil arrive a la bonne distance
   //Serial.println("FIN DU TEST");
 }
+void forwardX(float speed, float distance){ 
+  delay(250); //pas touche!!!
+  uint32_t nombrePulse=floor(distance*13367.32); //Convertion distance en nombre de pulse
+  //Declaration des variables
+  float memErreur = 0;
+  float erreurAvant = 0;
+  float diff = 0;
+  float valeurP = 0;
+  float valeurI = 0;
+  float valeurD = 0;
+  float rapport_Vitesse=0.4;
 
+  ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
+  ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
+  delay(250); //pas touche!!!
+  while(ENCODER_Read(LEFT)<nombrePulse){ //tant que l'encodeur lit un nombre de pulse inferieur a la valeur nescessaire le robot va continuer. On a ici choisit de lire la valeur de l'encodeur gauche en assumant que la valeur de l'encodeur droit est identique
+    
+    delay(100);
+
+    diff = (ENCODER_Read(LEFT) - ENCODER_Read(RIGHT));
+
+    //Serial.println(diff);
+
+    valeurP = (diff * kP);
+    valeurD = ((erreurAvant - diff)*kD);
+    erreurAvant = diff; 
+    memErreur = (memErreur + diff);
+    valeurI = (memErreur * kI);
+    
+    if(valeurI > capValeurI){
+      valeurI = capValeurI;
+    }
+    else if(valeurI < -capValeurI){
+      valeurI = -capValeurI;
+    }
+    else;
+     if(rapport_Vitesse < 1 && ENCODER_Read(LEFT) < float(nombrePulse*0.50)){
+        rapport_Vitesse+=0.2;
+    } 
+
+    MOTOR_SetSpeed(LEFT,(speed*rapport_Vitesse)); //Faire avancer le moteur gauche
+    MOTOR_SetSpeed(RIGHT,((speed+valeurP+valeurI+valeurD)*rapport_Vitesse)); //Faire avancer le moteur droit
+   //Pour arreter de faire avancer le Robot lorsquil arrive a la bonne distance
+  //Serial.println("FIN DU TEST");
+  }
+}
 void forwardB(float speed){ 
 delay(200); //pas touche!!!
 uint32_t nombrePulse=floor((4.65)*13367.32); //Convertion distance en nombre de pulse
