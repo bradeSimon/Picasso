@@ -37,6 +37,7 @@ bool detecteObstacle(void);
 void triangle(void);
 void carre(void);
 void trapeze(void);
+void courbe(float angle,float rayon);
 
 //--Enlever les commentaires des variables selon le robot a programmer--//
 //valeurs PID robot A:
@@ -62,7 +63,8 @@ float SPEEDrun = 0.0; //Vitesse ajoutee aux lignes droites pour le retour [0,1]
 
 float capValeurI = 0.04;
 float correctAngle = 2.;
-
+//distance entre le centre de l'essieu et une roue en metres
+float demiEssieu=0.0925;
 /*==========================================================================
 Fonction MAIN pour realiser le parcours
 ============================================================================*/
@@ -72,17 +74,11 @@ void setup() {BoardInit();} //Initialisation du board selon la libraire RobUS
 /*
 ROBOT B
 */
-<<<<<<< Updated upstream
 void loop() 
 {
-//forward(0.4, 1);
-  trapeze();
+  while(!ROBUS_IsBumper(3));
+  courbe(-360, 0.30);
 
-=======
-void loop() {
-  while(ROBUS_IsBumper(3)!=true);
-  pentagone();
->>>>>>> Stashed changes
 }
 
 /*==========================================================================
@@ -514,8 +510,8 @@ le while du main, nbvolt est la diff de tension entre bruit ambiant et 5kz,
 pin ADC 0 et 1
 ============================================================================*/
 unsigned int sifflet (void){
-  float nbvolt=0.2;
-  int valeurADC0 = analogRead(0);
+  //float nbvolt=0.2;
+ // int valeurADC0 = analogRead(0);
   int valeurADC1 = analogRead(1);
 
   if(valeurADC1>450){
@@ -571,7 +567,6 @@ void triangle(){
   forward(0.4, 1);
   delay(30);
 }
-<<<<<<< Updated upstream
 
 void carre(){
   //Commence par le point milieu de l'arête du haut du tableau
@@ -626,11 +621,8 @@ turn(0.2,45);
 delay(30);
 forward(0.4,0.25);
 delay(30);
-
-=======
->>>>>>> Stashed changes
-
-void carre(){
+}
+/*void carre(){
   //Commence au milieu de l'arrete du top du carre
   delay(30);
   turn(0.2, -90);
@@ -652,7 +644,7 @@ void carre(){
   turn(0.2, 90);
   delay(30);
   forward(0.4, 0.5);
-}
+}*/
 
 void pentagone(){
   //Commence au coin du top du pentagone
@@ -675,4 +667,35 @@ void pentagone(){
   turn(0.2, 72);
   delay(30);
   forward(0.4, 0.5);
+}
+/*Prend un angle en degres et un rayon en metres*/
+void courbe(float angle,float rayon){
+  float vitessegauche=0.1;
+  float vitessedroite=0.1;
+  ENCODER_ReadReset(LEFT); //Reset du compteur de l'encodeur gauche
+  ENCODER_ReadReset(RIGHT); //Reset du compteur de l'encodeur droit
+  if(angle>0){
+    angle=(angle*2*PI)/360;
+    float arcgauche=angle*(rayon-demiEssieu);
+    uint32_t nombrePulse=floor(arcgauche*13367.32); //Convertion distance en nombre de pulse
+    float arcdroit=angle*(rayon+demiEssieu);
+    float ratio=arcgauche/arcdroit; 
+    while(ENCODER_Read(LEFT)<nombrePulse){
+      MOTOR_SetSpeed(LEFT,vitessegauche);
+      MOTOR_SetSpeed(RIGHT,vitessegauche/ratio);
+    }  
+    stop();
+  }
+  else{
+    angle=-(angle*2*PI)/360;
+    float arcdroit=angle*(rayon-demiEssieu);
+    uint32_t nombrePulse=floor(arcdroit*13367.32); //Convertion distance en nombre de pulse
+    float arcgauche=angle*(rayon+demiEssieu);
+    float ratio=arcdroit/arcgauche; 
+    while(ENCODER_Read(RIGHT)<nombrePulse){
+      MOTOR_SetSpeed(RIGHT,vitessedroite);
+      MOTOR_SetSpeed(LEFT,vitessedroite/ratio);
+    }  
+    stop();
+  }
 }
